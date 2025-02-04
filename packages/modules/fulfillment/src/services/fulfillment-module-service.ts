@@ -17,6 +17,7 @@ import {
   SoftDeleteReturn,
   UpdateFulfillmentSetDTO,
   UpdateServiceZoneDTO,
+  ValidateFulfillmentDataContext,
 } from "@medusajs/framework/types"
 import {
   arrayDifference,
@@ -278,6 +279,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.CreateFulfillmentSetDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.FulfillmentSetDTO[]>
+  // @ts-expect-error
   createFulfillmentSets(
     data: FulfillmentTypes.CreateFulfillmentSetDTO,
     sharedContext?: Context
@@ -285,6 +287,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async createFulfillmentSets(
     data:
       | FulfillmentTypes.CreateFulfillmentSetDTO
@@ -348,6 +351,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.CreateServiceZoneDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ServiceZoneDTO[]>
+  // @ts-expect-error
   createServiceZones(
     data: FulfillmentTypes.CreateServiceZoneDTO,
     sharedContext?: Context
@@ -355,6 +359,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async createServiceZones(
     data:
       | FulfillmentTypes.CreateServiceZoneDTO[]
@@ -412,6 +417,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.CreateShippingOptionDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingOptionDTO[]>
+  // @ts-expect-error
   createShippingOptions(
     data: FulfillmentTypes.CreateShippingOptionDTO,
     sharedContext?: Context
@@ -419,6 +425,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async createShippingOptions(
     data:
       | FulfillmentTypes.CreateShippingOptionDTO[]
@@ -473,6 +480,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.CreateShippingProfileDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingProfileDTO[]>
+  // @ts-expect-error
   createShippingProfiles(
     data: FulfillmentTypes.CreateShippingProfileDTO,
     sharedContext?: Context
@@ -480,6 +488,7 @@ export default class FulfillmentModuleService
 
   @InjectTransactionManager()
   @EmitEvents()
+  // @ts-expect-error
   async createShippingProfiles(
     data:
       | FulfillmentTypes.CreateShippingProfileDTO[]
@@ -522,11 +531,12 @@ export default class FulfillmentModuleService
     return await this.shippingProfileService_.create(data_, sharedContext)
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   createGeoZones(
     data: FulfillmentTypes.CreateGeoZoneDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.GeoZoneDTO[]>
+  // @ts-expect-error
   createGeoZones(
     data: FulfillmentTypes.CreateGeoZoneDTO,
     sharedContext?: Context
@@ -534,6 +544,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async createGeoZones(
     data:
       | FulfillmentTypes.CreateGeoZoneDTO
@@ -559,11 +570,12 @@ export default class FulfillmentModuleService
     )
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   async createShippingOptionRules(
     data: FulfillmentTypes.CreateShippingOptionRuleDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingOptionRuleDTO[]>
+  // @ts-expect-error
   async createShippingOptionRules(
     data: FulfillmentTypes.CreateShippingOptionRuleDTO,
     sharedContext?: Context
@@ -571,6 +583,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async createShippingOptionRules(
     data:
       | FulfillmentTypes.CreateShippingOptionRuleDTO[]
@@ -650,7 +663,7 @@ export default class FulfillmentModuleService
           fulfillmentData || {},
           items.map((i) => i),
           order,
-          fulfillmentRest
+          fulfillmentRest as unknown as Partial<FulfillmentDTO>
         )
       await this.fulfillmentService_.update(
         {
@@ -710,11 +723,22 @@ export default class FulfillmentModuleService
       sharedContext
     )
 
+    const shippingOption = await this.shippingOptionService_.retrieve(
+      fulfillment.shipping_option_id!,
+      {
+        select: ["id", "name", "data", "metadata"],
+      },
+      sharedContext
+    )
+
     try {
       const providerResult =
         await this.fulfillmentProviderService_.createReturn(
           fulfillment.provider_id!, // TODO: should we add a runtime check on provider_id being provided?,
-          fulfillment as Record<any, any>
+          {
+            ...fulfillment,
+            shipping_option: shippingOption,
+          } as Record<any, any>
         )
       await this.fulfillmentService_.update(
         {
@@ -744,6 +768,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.UpdateFulfillmentSetDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.FulfillmentSetDTO[]>
+  // @ts-expect-error
   updateFulfillmentSets(
     data: FulfillmentTypes.UpdateFulfillmentSetDTO,
     sharedContext?: Context
@@ -751,6 +776,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async updateFulfillmentSets(
     data: UpdateFulfillmentSetDTO[] | UpdateFulfillmentSetDTO,
     @MedusaContext() sharedContext: Context = {}
@@ -983,6 +1009,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.UpdateServiceZoneDTO,
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ServiceZoneDTO>
+  // @ts-expect-error
   updateServiceZones(
     selector: FulfillmentTypes.FilterableServiceZoneProps,
     data: FulfillmentTypes.UpdateServiceZoneDTO,
@@ -991,6 +1018,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async updateServiceZones(
     idOrSelector: string | FulfillmentTypes.FilterableServiceZoneProps,
     data: FulfillmentTypes.UpdateServiceZoneDTO,
@@ -1287,6 +1315,7 @@ export default class FulfillmentModuleService
     data: FulfillmentTypes.UpdateShippingOptionDTO,
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingOptionDTO>
+  // @ts-expect-error
   updateShippingOptions(
     selector: FulfillmentTypes.FilterableShippingOptionProps,
     data: FulfillmentTypes.UpdateShippingOptionDTO,
@@ -1295,6 +1324,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async updateShippingOptions(
     idOrSelector: string | FulfillmentTypes.FilterableShippingOptionProps,
     data: FulfillmentTypes.UpdateShippingOptionDTO,
@@ -1612,12 +1642,13 @@ export default class FulfillmentModuleService
     return [...created, ...updated]
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   updateShippingProfiles(
     selector: FulfillmentTypes.FilterableShippingProfileProps,
     data: FulfillmentTypes.UpdateShippingProfileDTO,
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingProfileDTO[]>
+  // @ts-expect-error
   updateShippingProfiles(
     id: string,
     data: FulfillmentTypes.UpdateShippingProfileDTO,
@@ -1625,6 +1656,7 @@ export default class FulfillmentModuleService
   ): Promise<FulfillmentTypes.ShippingProfileDTO>
 
   @InjectTransactionManager()
+  // @ts-expect-error
   async updateShippingProfiles(
     idOrSelector: string | FulfillmentTypes.FilterableShippingProfileProps,
     data: FulfillmentTypes.UpdateShippingProfileDTO,
@@ -1716,11 +1748,12 @@ export default class FulfillmentModuleService
     return Array.isArray(data) ? allProfiles : allProfiles[0]
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   updateGeoZones(
     data: FulfillmentTypes.UpdateGeoZoneDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.GeoZoneDTO[]>
+  // @ts-expect-error
   updateGeoZones(
     data: FulfillmentTypes.UpdateGeoZoneDTO,
     sharedContext?: Context
@@ -1728,6 +1761,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async updateGeoZones(
     data:
       | FulfillmentTypes.UpdateGeoZoneDTO
@@ -1759,11 +1793,12 @@ export default class FulfillmentModuleService
     return Array.isArray(data) ? serialized : serialized[0]
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   updateShippingOptionRules(
     data: FulfillmentTypes.UpdateShippingOptionRuleDTO[],
     sharedContext?: Context
   ): Promise<FulfillmentTypes.ShippingOptionRuleDTO[]>
+  // @ts-expect-error
   updateShippingOptionRules(
     data: FulfillmentTypes.UpdateShippingOptionRuleDTO,
     sharedContext?: Context
@@ -1771,6 +1806,7 @@ export default class FulfillmentModuleService
 
   @InjectManager()
   @EmitEvents()
+  // @ts-expect-error
   async updateShippingOptionRules(
     data:
       | FulfillmentTypes.UpdateShippingOptionRuleDTO[]
@@ -2002,7 +2038,7 @@ export default class FulfillmentModuleService
     providerId: string,
     optionData: Record<string, unknown>,
     data: Record<string, unknown>,
-    context: Record<string, unknown>
+    context: ValidateFulfillmentDataContext
   ): Promise<Record<string, unknown>> {
     return await this.fulfillmentProviderService_.validateFulfillmentData(
       providerId,
@@ -2012,6 +2048,7 @@ export default class FulfillmentModuleService
     )
   }
 
+  // TODO: seems not to be used, what is the purpose of this method?
   async validateFulfillmentOption(
     providerId: string,
     data: Record<string, unknown>
@@ -2058,10 +2095,7 @@ export default class FulfillmentModuleService
     }
 
     const promises = shippingOptionsData.map((option) =>
-      this.fulfillmentProviderService_.canCalculate(
-        option.provider_id,
-        option as unknown as Record<string, unknown>
-      )
+      this.fulfillmentProviderService_.canCalculate(option.provider_id, option)
     )
 
     return await promiseAll(promises)

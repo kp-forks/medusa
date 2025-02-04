@@ -66,7 +66,7 @@ export interface FindConfig<Entity> {
   /**
    * An array of strings, each being attribute names of the entity to retrieve in the result.
    */
-  select?: (keyof Entity | string)[]
+  select?: (keyof Entity | (string & {}))[]
 
   /**
    * A number indicating the number of records to skip before retrieving the results.
@@ -443,7 +443,7 @@ export type QueryConfig<TEntity> = {
   defaultLimit?: number
   /**
    * If the route that will use that configuration is supposed to return a list of entities. This
-   * will change the configuration that will be created on req.listConfig and req.remoteQueryConfig (among
+   * will change the configuration that will be created on req.listConfig and req.queryConfig (among
    * other things it will include pagination and sorting)
    */
   isList?: boolean
