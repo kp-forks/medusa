@@ -15533,7 +15533,9 @@ The object you pass to Link's `create` method accepts a `data` property. Its val
 
 For example:
 
-Learn more about Link, how to resolve it, and its methods in [this chapter](https://docs.medusajs.com/learn/fundamentals/module-links/link/index.html.md).
+Refer to the [Link](https://docs.medusajs.com/learn/fundamentals/module-links/link/index.html.md) chapter to learn how to import and use the `link` instance.
+
+### Link
 
 ```ts
 await link.create({
@@ -15549,6 +15551,46 @@ await link.create({
     },
   },
 })
+```
+
+### createRemoteLinksStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { BLOG_MODULE } from "../modules/blog"
+import { createRemoteLinksStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "123",
+          },
+          [BLOG_MODULE]: {
+            post_id: "321",
+          },
+          data: {
+            metadata: {
+              test: true,
+            },
+          },
+        },
+      ]
+    })
+    createRemoteLinksStep(linkData)
+    // ...
+  }
+)
 ```
 
 ***
@@ -15611,6 +15653,8 @@ So, to update the value of a custom column in a created link, use the `create` m
 
 For example:
 
+### Link
+
 ```ts
 await link.create({
   [Modules.PRODUCT]: {
@@ -15625,6 +15669,46 @@ await link.create({
     },
   },
 })
+```
+
+### updateRemoteLinksStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { BLOG_MODULE } from "../modules/blog"
+import { updateRemoteLinksStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "123",
+          },
+          [BLOG_MODULE]: {
+            post_id: "321",
+          },
+          data: {
+            metadata: {
+              test: false,
+            },
+          },
+        },
+      ]
+    })
+    updateRemoteLinksStep(linkData)
+    // ...
+  }
+)
 ```
 
 
@@ -16488,6 +16572,17 @@ export async function POST(
 
 You can use its methods to manage links, such as create or delete links.
 
+### Link Usage in Workflows
+
+To perform link operations in a [workflow](https://docs.medusajs.com/learn/fundamentals/workflows/index.html.md), Medusa provides the following steps out-of-the-box:
+
+- [createRemoteLinkStep](https://docs.medusajs.com/resources/references/helper-steps/createRemoteLinkStep/index.html.md): Creates a link between records of two data models.
+- [dismissRemoteLinkStep](https://docs.medusajs.com/resources/references/helper-steps/dismissRemoteLinkStep/index.html.md): Removes a link between records of two data models.
+- [removeRemoteLinkStep](https://docs.medusajs.com/resources/references/helper-steps/removeRemoteLinkStep/index.html.md): Deletes all linked records whose links are defined with cascade deletion.
+- [updateRemoteLinksStep](https://docs.medusajs.com/resources/references/helper-steps/updateRemoteLinksStep/index.html.md): Updates links between records of two data models.
+
+The rest of this chapter provides examples using the Link class and the workflow steps.
+
 ***
 
 ## Create Link
@@ -16495,6 +16590,8 @@ You can use its methods to manage links, such as create or delete links.
 To create a link between records of two data models, use the `create` method of Link.
 
 For example:
+
+### Link
 
 ```ts
 import { Modules } from "@medusajs/framework/utils"
@@ -16505,10 +16602,44 @@ await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_123",
+  blog: {
+    post_id: "post_123",
   },
 })
+```
+
+### createRemoteLinkStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { createRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "prod_123",
+          },
+          blog: {
+            post_id: "post_123",
+          },
+        },
+      ]
+    })
+    createRemoteLinkStep(linkData)
+    // ...
+  }
+)
 ```
 
 The `create` method accepts as a parameter an object. The object’s keys are the names of the linked modules.
@@ -16517,7 +16648,7 @@ The keys (names of linked modules) must be in the same [direction](https://docs.
 
 The value of each module’s property is an object, whose keys are of the format `{data_model_snake_name}_id`, and values are the IDs of the linked record.
 
-So, in the example above, you link a record of the `MyCustom` data model in a `hello` module to a `Product` record in the Product Module.
+So, in the example above, you link a record of the `Post` data model in a `blog` module to a `Product` record in the Product Module.
 
 ### Enforced Integrity Constraints on Link Creation
 
@@ -16531,23 +16662,23 @@ await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_123",
+  blog: {
+    post_id: "post_123",
   },
 })
 
-// throws an error because `prod_123` already has a link to `mc_123`
+// throws an error because `prod_123` already has a link to `post_123`
 await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_456",
+  blog: {
+    post_id: "mc_456",
   },
 })
 ```
 
-- If the link is one-to-many and the "one" side already has a link to another record of the same data model. For example, if a product can have many `MyCustom` records, but a `MyCustom` record can only have one product:
+- If the link is one-to-many and the "one" side already has a link to another record of the same data model. For example, if a product can have many `Post` records, but a `Post` record can only have one product:
 
 ```ts
 // no error
@@ -16555,8 +16686,8 @@ await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_123",
+  blog: {
+    post_id: "post_123",
   },
 })
 
@@ -16565,18 +16696,18 @@ await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_456",
+  blog: {
+    post_id: "mc_456",
   },
 })
 
-// throws an error because `mc_123` already has a link to `prod_123`
+// throws an error because `post_123` already has a link to `prod_123`
 await link.create({
   [Modules.PRODUCT]: {
     product_id: "prod_456",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_123",
+  blog: {
+    post_id: "post_123",
   },
 })
 ```
@@ -16591,6 +16722,8 @@ To remove a link between records of two data models, use the `dismiss` method of
 
 For example:
 
+### Link
+
 ```ts
 import { Modules } from "@medusajs/framework/utils"
 
@@ -16600,10 +16733,44 @@ await link.dismiss({
   [Modules.PRODUCT]: {
     product_id: "prod_123",
   },
-  "helloModuleService": {
-    my_custom_id: "mc_123",
+  blog: {
+    post_id: "post_123",
   },
 })
+```
+
+### dismissRemoteLinkStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { dismissRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "prod_123",
+          },
+          blog: {
+            post_id: "post_123",
+          },
+        },
+      ]
+    })
+    dismissRemoteLinkStep(linkData)
+    // ...
+  }
+)
 ```
 
 The `dismiss` method accepts the same parameter type as the [create method](#create-link).
@@ -16618,6 +16785,8 @@ If you delete a record using a workflow or its module's service, use the `delete
 
 For example:
 
+### Link
+
 ```ts
 import { Modules } from "@medusajs/framework/utils"
 
@@ -16630,6 +16799,37 @@ await link.delete({
     product_id: "prod_123",
   },
 })
+```
+
+### removeRemoteLinkStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { removeRemoteLinkStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "prod_123",
+          },
+        },
+      ]
+    })
+    removeRemoteLinkStep(linkData)
+    // ...
+  }
+)
 ```
 
 This deletes all records linked to the deleted product.
@@ -16655,6 +16855,81 @@ await link.restore({
   },
 })
 ```
+
+***
+
+## Update Links
+
+Links may have [custom columns](https://docs.medusajs.com/learn/fundamentals/module-links/custom-columns/index.html.md) to store additional information, such as a `metadata` column to store JSON data about the link.
+
+You can update the custom columns of existing links by calling the `create` method again with the same linked records and the new values for the custom columns.
+
+For example:
+
+### Link
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+
+// ...
+
+await link.create({
+  [Modules.PRODUCT]: {
+    product_id: "prod_123",
+  },
+  blog: {
+    post_id: "post_123",
+  },
+  data: {
+    metadata: {
+      featured: true,
+    },
+  },
+})
+```
+
+### updateRemoteLinksStep
+
+```ts
+import { Modules } from "@medusajs/framework/utils"
+import { updateRemoteLinksStep } from "@medusajs/medusa/core-flows"
+import { 
+  createWorkflow,
+  transform,
+} from "@medusajs/framework/workflows-sdk"
+
+export const myWorkflow = createWorkflow(
+  "my-workflow",
+  () => {
+    // ...
+    const linkData = transform({
+      // TODO pass input data
+    }, () => {
+      return [
+        {
+          [Modules.PRODUCT]: {
+            product_id: "prod_123",
+          },
+          blog: {
+            post_id: "post_123",
+          },
+          data: {
+            metadata: {
+              featured: true,
+            },
+          },
+        },
+      ]
+    })
+    updateRemoteLinksStep(linkData)
+    // ...
+  }
+)
+```
+
+The object parameter you pass to the `create` method (or the `updateRemoteLinksStep` step) accepts an optional `data` property. The value of this property is an object whose keys are the names of the custom columns to update, and values are the new values for those columns.
+
+Learn more in the [Custom Columns](https://docs.medusajs.com/learn/fundamentals/module-links/custom-columns/index.html.md) chapter.
 
 
 # Define Module Link
@@ -23420,9 +23695,11 @@ Refer to the [Locking Module reference](https://docs.medusajs.com/resources/refe
 
 ## Locks in Nested Workflows
 
-[Nested workflows](https://docs.medusajs.com/learn/fundamentals/workflows/execute-another-workflow/index.html.md) can't acquire locks. So, if you're using a workflow that acquires locks within another workflow, the parent workflow must handle the locking mechanism.
+When a [Nested workflows](https://docs.medusajs.com/learn/fundamentals/workflows/execute-another-workflow/index.html.md) acquires a lock with `acquireLockStep`, the lock is not acquired. So, if you're using a workflow that acquires locks with `acquireLockStep` within another workflow, the parent workflow must handle the locking mechanism.
 
-For example, consider a custom workflow that executes Medusa's [completeCartWorkflow](https://docs.medusajs.com/resources/references/medusa-workflows/completeCartWorkflow/index.html.md). The `completeCartWorkflow` acquires locks on the cart to prevent race conditions.
+If the nested workflow acquires a lock in a step using the Locking Module's service, the lock will be acquired as expected.
+
+For example, consider a custom workflow that executes Medusa's [completeCartWorkflow](https://docs.medusajs.com/resources/references/medusa-workflows/completeCartWorkflow/index.html.md). The `completeCartWorkflow` acquires locks on the cart with `acquireLockStep` to prevent race conditions.
 
 Therefore, the custom workflow must acquire and release the locks around the `completeCartWorkflow` execution. For example:
 
@@ -25593,6 +25870,51 @@ The following diagram illustrates Medusa's architecture including all its layers
 
 In this chapter, you'll learn how you can use AI assistants and LLMs effectively in your Medusa development.
 
+## MCP Remote Server
+
+The Medusa documentation provides a remote Model Context Protocol (MCP) server that allows you to find information from the Medusa documentation right in your IDEs or AI tools, such as Cursor.
+
+Medusa hosts a Streamable HTTP MCP server available at `https://docs.medusajs.com/mcp`. you can add it to AI agents that support connecting to MCP servers.
+
+### Cursor
+
+<Link href="cursor://anysphere.cursor-deeplink/mcp/install?name=medusa&config=eyJ1cmwiOiJodHRwczovL2RvY3MubWVkdXNhanMuY29tL21jcCJ9" target="_blank" rel="noopener noreferrer" variant="content">Click here</Link> to add the Medusa MCP server to Cursor.
+
+To manually connect to the Medusa MCP server in Cursor, add the following to your `.cursor/mcp.json` file or Cursor settings, as explained in the [Cursor documentation](https://docs.cursor.com/context/model-context-protocol):
+
+```json
+{
+  "mcpServers": {
+    "medusa": {
+      "url": "https://docs.medusajs.com/mcp"
+    }
+  }
+}
+```
+
+### VSCode
+
+To manually connect to the Medusa MCP server in Claude Code, run the following command in your terminal:
+
+```sh
+claude mcp add --transport http medusa https://docs.medusajs.com/mcp
+```
+
+### Claude Code
+
+### How to Use the MCP Server
+
+After connecting to the Medusa MCP server in your AI tool or IDE, you can start asking questions or requesting your AI assistant to build Medusa customizations. It will fetch the relevant information from the Medusa documentation and provide you with accurate answers, code snippets, and explanations.
+
+For example, you can ask:
+
+1. "Create a Product Review module for Medusa. Refer to the Medusa documentation for information."
+2. "How to update Medusa to the latest version?"
+3. "Explain the Medusa workflow system."
+4. "Integrate Medusa with X provider. Refer to the Medusa documentation for information."
+
+***
+
 ## AI Assistant in Documentation
 
 The Medusa documentation is equipped with an AI Assistant that can answer your questions and help you build customizations with Medusa.
@@ -25634,40 +25956,6 @@ console.log("Hello, World!")
 ````
 
 You can add new lines using the `Shift + Enter` shortcut.
-
-***
-
-## MCP Remote Server
-
-The Medusa documentation provides a remote Model Context Protocol (MCP) server that allows you to find information from the Medusa documentation right in your IDEs or AI tools, such as Cursor.
-
-Medusa hosts a Streamable HTTP MCP server available at `https://docs.medusajs.com/mcp`. you can add it to AI agents that support connecting to MCP servers.
-
-### Cursor
-
-<Link href="cursor://anysphere.cursor-deeplink/mcp/install?name=medusa&config=eyJ1cmwiOiJodHRwczovL2RvY3MubWVkdXNhanMuY29tL21jcCJ9" target="_blank" rel="noopener noreferrer" variant="content">Click here</Link> to add the Medusa MCP server to Cursor.
-
-To manually connect to the Medusa MCP server in Cursor, add the following to your `.cursor/mcp.json` file or Cursor settings, as explained in the [Cursor documentation](https://docs.cursor.com/context/model-context-protocol):
-
-```json
-{
-  "mcpServers": {
-    "medusa": {
-      "url": "https://docs.medusajs.com/mcp"
-    }
-  }
-}
-```
-
-### VSCode
-
-To manually connect to the Medusa MCP server in Claude Code, run the following command in your terminal:
-
-```sh
-claude mcp add --transport http medusa https://docs.medusajs.com/mcp
-```
-
-### Claude Code
 
 ***
 
@@ -35434,7 +35722,7 @@ const totalRefunded = refundTransactions?.reduce((acc, t) => acc + Math.abs(t!.a
 
 In this section of the documentation, you'll find guides and references related to Medusa's Commerce Modules.
 
-A Commerce Module provides features for a commerce domain within its service. The Medusa application exposes these features in its API routes to clients.
+A Commerce Module provides features for a commerce domain within its service. When you install the Medusa application, all Commerce Modules are available out-of-the-box. The Medusa application exposes their features in its core API routes to clients.
 
 A Commerce Module also defines data models, representing tables in the database. The Medusa Framework and tools allow you to extend these data models to add custom fields.
 
@@ -35465,7 +35753,7 @@ A Commerce Module also defines data models, representing tables in the database.
 
 The Commerce Modules can be used in many use cases, including:
 
-- Medusa Application: The Medusa application uses the Commerce Modules to expose commerce features through the REST APIs.
+- Medusa Application: The Medusa application comes with all Commerce Modules pre-installed and configured. Their commerce features are exposed through REST APIs.
 - Serverless Application: Use the Commerce Modules in a serverless application, such as a Next.js application, without having to manage a fully-fledged ecommerce system. You can use it by installing it in your Node.js project as an NPM package.
 - Node.js Application: Use the Commerce Modules in any Node.js application by installing it with NPM.
 
@@ -41850,7 +42138,7 @@ Learn more about why modules are isolated in [this documentation](https://docs.m
 ## Store Features
 
 - [Store Management](https://docs.medusajs.com/references/store/models/Store/index.html.md): Create and manage stores in your application.
-- [Multi-Tenancy Support](https://docs.medusajs.com/references/store/models/Store/index.html.md): Create multiple stores, each having its own configurations.
+- [Multi-Tenancy Support](https://docs.medusajs.com/references/store/models/Store/index.html.md): While Medusa doesn't natively support multi-tenancy, the Store Module allows you to create and manage multiple stores within a single Medusa instance. You can then build customizations to link products, customers, orders, and other resources to specific stores.
 
 ***
 
@@ -46201,8 +46489,8 @@ module.exports = defineConfig({
             // keep jobs for 1 hour or up to 1000 jobs
             age: 3600,
             count: 1000,
-          }
-        }
+          },
+        },
       },
     },
   ],
@@ -95255,7 +95543,7 @@ const StripeSavedPaymentMethodsContainer = ({
     await initiatePaymentSession(cart, {
       provider_id: method.provider_id,
       data: {
-        payment_method_id: method.id,
+        payment_method: method.id,
       },
     }).catch((error) => {
       setError(error.message)
